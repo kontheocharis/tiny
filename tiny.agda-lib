@@ -1,0 +1,6 @@
+name: tiny
+depend: standard-library
+include: .
+flags:
+  --prop
+  --rewriting
