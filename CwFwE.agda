@@ -5,6 +5,8 @@ open import Agda.Primitive
 open import Utils
 open import Relation.Binary.PropositionalEquality hiding ([_])
 
+open ≡-Reasoning
+
 data Mode : Set where
   z : Mode
   ω : Mode
@@ -41,7 +43,7 @@ opaque
 -- Better definitional computation for _*_
 {-# REWRITE j*ω ω*j z*j j*z #-}
 
-record CwF-sorts : Set where
+record CwFwE-sorts : Set where
   field
     -- Sorts
     Con : Set
@@ -50,8 +52,8 @@ record CwF-sorts : Set where
     #∈ : Con → Set
     Tm : ∀ Γ → Mode → Ty Γ → Set
 
-module in-CwF-sorts (s : CwF-sorts) where
-  open CwF-sorts s
+module in-CwFwE-sorts (s : CwFwE-sorts) where
+  open CwFwE-sorts s
   variable
     Γ Δ Θ : Con
     σ τ ρ : Sub _ _
@@ -59,7 +61,7 @@ module in-CwF-sorts (s : CwF-sorts) where
     t u v : Tm _ _ _
     π : #∈ _
 
-  record CwF-core : Set where
+  record CwFwE-core : Set where
     field
       id : Sub Γ Γ
       _∘_ : (σ : Sub Δ Θ) → (τ : Sub Γ Δ) → Sub Γ Θ
@@ -90,9 +92,9 @@ module in-CwF-sorts (s : CwF-sorts) where
       p : Sub (Γ ▷[ i ] A) Γ
       q : Tm (Γ ▷[ i ] A) i (A [ p ]T)
       _,,_ : (σ : Sub Γ Δ) → (t : Tm Γ i (A [ σ ]T)) → Sub Γ (Δ ▷[ i ] A)
-      ,∘ : (σ ,, t) ∘ ρ ≡ (σ ∘ ρ) ,, coeTm (sym [∘]T) (t [ ρ ])
+      ,∘ : {t : Tm Γ i (A [ σ ]T)} → (σ ,, t) ∘ ρ ≡ (σ ∘ ρ) ,, coeTm (sym [∘]T) (t [ ρ ])
       p,q : p {Γ} {i} {A} ,, q ≡ id
-      p∘, : p ∘ (σ ,, t) ≡ σ
+      p∘, : {t : Tm Γ i (A [ σ ]T)} → p ∘ (σ ,, t) ≡ σ
       q[,] : q [ σ ,, t ] ≡[ cong (Tm Γ i) (trans (sym [∘]T) (cong (A [_]T) p∘,)) ] t
 
       -- Context extension for #
@@ -115,27 +117,73 @@ module in-CwF-sorts (s : CwF-sorts) where
     ⟨ t ⟩ = id ,, (t [ id ])
 
     _⁺ : (σ : Sub Γ Δ) → Sub (Γ ▷[ i ] (A [ σ ]T)) (Δ ▷[ i ] A)
-    σ ⁺ = (σ ∘ p) ,, subst (Tm _ _) (sym [∘]T) q
+    σ ⁺ = (σ ∘ p) ,, coeTm (sym [∘]T) q
+
+    ↓* : Tm Γ i A → Tm Γ z A
+    ↓* {i = z} t = t
+    ↓* {i = ω} t = ↓ (t [ p# ])
   
+    pz : Sub (Γ ▷[ i ] A) (Γ ▷[ z ] A)
+    pz = p ,, ↓* q
 
-  module in-CwF-core (c : CwF-core) where
-    open CwF-core c
+    -- pz-id : pz {Γ} {z} {A} ≡ id
+    -- pz-id = p,q
 
-  --   record Π-structure  : Set where
-  --     field
-  --       Π : (i : Mode) → (A : Ty Γ) → (B : Ty (Γ ▷[ z ] A)) → Ty Γ
-  --       Π[] : (Π i A B) [ σ ]T ≡ Π i (A [ σ ]T) (B [ σ ⁺ ]T)
+    -- pz∘⁺≡⁺∘pz : (_⁺ {Γ} {A = A} σ) ∘ pz {Γ} {ω} ≡ pz ∘ (σ ⁺)
+    -- pz∘⁺≡⁺∘pz {Γ = Γ} {A = A} {σ = σ} = begin
+    --   ((σ ⁺) ∘ pz)
+    --   ≡⟨  ,∘ ⟩
+    --   (((σ ∘ p) ∘ pz) ,,
+    --     coeTm (sym [∘]T)
+    --     (coeTm (sym [∘]T) q [ pz ]))
+    --   ≡⟨⟩
+    --   (((σ ∘ p) ∘ (p ,, ↓ q)) ,,
+    --     coeTm (sym [∘]T)
+    --     (coeTm (sym [∘]T) q [ p ,, q ]))
+    --   ≡⟨ {! cong (λ σ → σ , )!} ⟩
+    --   ((σ ∘ (p ∘ (p ,, q))) ,,
+    --     coeTm (cong (A [_]T) (sym assoc) ) (coeTm (sym [∘]T)
+    --     (coeTm (sym [∘]T) q [ p ,, q ])))
+    --   ≡⟨ {! p∘,!} ⟩
+    --   ((σ ∘ p) ,,
+    --     coeTm {!!} (coeTm (sym [∘]T) (q [ σ ⁺ ])))
+    --   ≡⟨ {! p∘,!} ⟩
+    --   ((p ∘ ((σ ∘ p) ,, coeTm (sym [∘]T) q)) ,,
+    --     coeTm (sym [∘]T) (q [ σ ⁺ ]))
+    --   ≡⟨ {! p∘,!} ⟩
+    --   ((p ∘ (σ ⁺)) ,,
+    --     coeTm (sym [∘]T) (q [ σ ⁺ ]))
+    --   ≡⟨  sym ,∘ ⟩
+    --   (pz ∘ (σ ⁺))
+    --   ∎
 
-  --       lam : (f : Tm (Γ ▷[ i ] A) ω B) → Tm Γ ω (Π i A (B [ ? ]T))
-  --       lam[] : (lam t) [ σ ] ≡[ cong (Tm _) Π[] ] lam (t [ σ ⁺ ])
+    -- [pz][⁺]≡[⁺][pz] : (A [ σ ⁺ ]T) [ pz {Γ} {z} ]T ≡ (A [ pz ]T) [ σ ⁺ ]T
+    -- [pz][⁺]≡[⁺][pz] {A = A} {Γ = Γ} {σ = σ} = begin
+    --   ((A [ σ ⁺ ]T) [ pz {Γ} {z} ]T)
+    --   ≡⟨  sym [∘]T ⟩
+    --   (A [ (σ ⁺) ∘ pz ]T)
+    --   ≡⟨ cong (A [_]T) pz∘⁺≡⁺∘pz ⟩
+    --   (A [ pz ∘ (σ ⁺) ]T)
+    --   ≡⟨  [∘]T ⟩
+    --   ((A [ pz ]T) [ σ ⁺ ]T)
+    --   ∎
 
-  --       ap : (f : Tm Γ (Π A B)) → Tm (Γ ▷[ i ] A) B
+  module in-CwFwE-core (c : CwFwE-core) where
+    open CwFwE-core c
 
-  --       Πβ : ap (lam t) ≡ t
-  --       Πη : lam (ap t) ≡ t
+    record Π-structure  : Set where
+      field
+        Π : (i : Mode) → (A : Ty Γ) → (B : Ty (Γ ▷[ z ] A)) → Ty Γ
+        Π[] : (Π i A B) [ σ ]T ≡ Π i (A [ σ ]T) (B [ σ ⁺ ]T)
 
-  --     _⇒_ : Ty Γ → Ty Γ → Ty Γ
-  --     A ⇒ B = Π A (B [ p ]T)
+        lam : (f : Tm (Γ ▷[ i ] A) ω (B [ pz ]T)) → Tm Γ ω (Π i A B)
+        -- lam[] : (lam t) [ σ ]
+        --   ≡[ cong (Tm _ _) Π[] ] lam (coeTm (sym [pz][⁺]≡[⁺][pz]) (t [ σ ⁺ ]))
+
+        ap : (f : Tm Γ ω (Π i A B)) → Tm (Γ ▷[ i ] A) ω (B [ pz ]T)
+
+        Πβ : ap (lam t) ≡ t
+        Πη : lam (ap t) ≡ t
 
     record U-structure : Set where
       field
