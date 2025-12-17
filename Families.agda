@@ -151,13 +151,13 @@ base-in-inj (t₀ , t₁) (u₀₁ , u₁) p =
 squash-in : Tm Γ S.U → Ty Γ
 squash-in (t , _) = (λ γ → t γ .proj₁) , (λ γ γ' a → t γ .proj₂ a)
 
--- but this is not injective!
-squash-in-inj : (t u : Tm Γ S.U) → squash-in t ≡ squash-in u → t ≡ u
+-- but this only injective for closed codes!
+squash-in-inj : (t u : Tm ∙ S.U) → squash-in t ≡ squash-in u → t ≡ u
 squash-in-inj (t₀ , t₁) (u₀₁ , u₁) p =
   let (p₀ , p₁) = Σ-≡,≡←≡ p in
-  let p₀' = (λ γ → cong (λ x → x γ) p₀) in
-  let p₁' = (λ γ → cong (λ x → x γ) p₁) in
+  let p₀' = cong (λ x → x tt) p₀ in
+  let p₁' = cong (λ x → x tt tt) p₁ in
   Σ-≡,≡→≡
-    (funext (λ γ → Σ-≡,≡→≡ (p₀' γ , {! !})) -- cannot fill this hole
+    (funext (λ tt → Σ-≡,≡→≡ (p₀' , {! p₁' tt!})) 
     , refl)
 
