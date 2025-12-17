@@ -13,7 +13,7 @@ record CwF-sorts : Set where
     Ty : Con → Set
     Tm : ∀ Γ → Ty Γ → Set
 
-module _ (s : CwF-sorts) where
+module in-CwF-sorts (s : CwF-sorts) where
   open CwF-sorts s
   variable
     Γ Δ Θ : Con
@@ -62,10 +62,26 @@ module _ (s : CwF-sorts) where
     σ ⁺ = (σ ∘ p) ,, subst (Tm _) (sym [∘]T) q
   
 
-  module _ (c : CwF-core) where
+  module in-CwF-core (c : CwF-core) where
     open CwF-core c
 
-    record Univ-structure : Set where
+    record Π-structure  : Set where
+      field
+        Π : (A : Ty Γ) → (B : Ty (Γ ▷ A)) → Ty Γ
+        Π[] : (Π A B) [ σ ]T ≡ Π (A [ σ ]T) (B [ σ ⁺ ]T)
+
+        lam : (f : Tm (Γ ▷ A) B) → Tm Γ (Π A B)
+        lam[] : (lam t) [ σ ] ≡[ cong (Tm _) Π[] ] lam (t [ σ ⁺ ])
+
+        ap : (f : Tm Γ (Π A B)) → Tm (Γ ▷ A) B
+
+        β : ap (lam t) ≡ t
+        η : lam (ap t) ≡ t
+
+      _⇒_ : Ty Γ → Ty Γ → Ty Γ
+      A ⇒ B = Π A (B [ p ]T)
+
+    record U-structure : Set where
       field
         U : Ty Γ
         U[] : U [ σ ]T ≡ U
@@ -94,8 +110,8 @@ module _ (s : CwF-sorts) where
       _▷U_ : (Γ : Con) → Tm Γ U → Con
       Γ ▷U t = Γ ▷ El t
 
-    record Π-structure (univ : Univ-structure) : Set where
-      open Univ-structure univ
+    record ΠU-structure (univ : U-structure) : Set where
+      open U-structure univ
       field
         Π : (t : Tm Γ U) → (u : Tm (Γ ▷U t) U) → Tm Γ U
         Π[] : (Π t u) [ σ ]U ≡ Π (t [ σ ]U) (u [ σ ⁺U ]U)

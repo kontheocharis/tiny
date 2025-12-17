@@ -23,3 +23,12 @@ _∣_≡[_]_ F f p g = subst F p f ≡ g
 
 _≡[_]_ : ∀ {A B : Set ℓ} (a : A) (p : A ≡ B) (b : B) → Set ℓ
 _≡[_]_ {A} {B} a p b = coe p a ≡ b
+
+record _≃_ (A : Set ℓ) (B : Set ℓ) : Set ℓ where
+  field
+    to : A → B
+    from : B → A
+    to-from : ∀ x → to (from x) ≡ x
+    from-to : ∀ x → from (to x) ≡ x
+
+open _≃_ public
