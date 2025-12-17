@@ -60,15 +60,104 @@ module _ where
   fam-Π .Πβ = refl
   fam-Π .Πη = refl
 
-  open U-structure
+  open U-small-structure
+  open U-big-structure
+  open ΠU-structure
 
   -- Hofmann-Streicher universe
-  fam-HSU : U-structure fam-s fam-c
+  fam-HSU : U-small-structure fam-s fam-c
   fam-HSU .U = (λ γ → Set) , λ γ γ' A → A → Set
   fam-HSU .U[] = refl
   fam-HSU .El (t₀ , t₁) = t₀ , t₁
   fam-HSU .El[] = refl
-  fam-HSU .code (A₀ , A₁) = A₀ , A₁ 
-  fam-HSU .code[] = refl
-  fam-HSU .El-code = refl
-  fam-HSU .code-El = refl
+
+  fam-HSU-b : U-big-structure fam-s fam-c fam-HSU
+  fam-HSU-b .code (A₀ , A₁) = A₀ , A₁ 
+  fam-HSU-b .code[] = refl
+  fam-HSU-b .El-code = refl
+  fam-HSU-b .code-El = refl
+
+  -- Squashed universe
+  fam-SQ : U-small-structure fam-s fam-c
+  fam-SQ .U = (λ γ → Σ[ A ∈ Set ] (A → Set)) , λ γ γ' A → ⊤
+  fam-SQ .U[] = refl
+  fam-SQ .El (t₀ , _) = (λ γ → t₀ γ .proj₁) , (λ γ γ' a → t₀ γ .proj₂ a)
+  fam-SQ .El[] = refl
+
+  -- Pi types in the squashed universe
+  fam-SQΠ : ΠU-structure fam-s fam-c fam-SQ
+  fam-SQΠ .ΠU (A , _) (B , _)
+    = (λ γ → ((a : A γ .proj₁) → B (γ , a) .proj₁)
+      , λ f → ∀ a → (a' : A γ .proj₂ a) → B (γ , a) .proj₂ (f a))
+      , λ γ γ' → tt
+  fam-SQΠ .ΠU[] = refl
+  fam-SQΠ .lamU = λ f →
+                     (λ γ a → f .proj₁ (γ , a)) ,
+                     (λ γ γ' a a' → f .proj₂ (γ , a) (γ' , a'))
+  fam-SQΠ .lamU[] = refl
+  fam-SQΠ .apU = λ f →
+                    (λ γ → f .proj₁ (γ .proj₁) (γ .proj₂)) ,
+                    (λ γ γ' → f .proj₂ (γ .proj₁) (γ' .proj₁) (γ .proj₂) (γ' .proj₂))
+  fam-SQΠ .ΠβU = refl
+  fam-SQΠ .ΠηU = refl
+
+open CwF-sorts fam-s
+open in-CwF-sorts fam-s
+open CwF-core fam-c
+open in-CwF-core fam-c
+open Π-structure fam-Π
+open U-small-structure fam-HSU
+open U-big-structure fam-HSU-b
+
+module S = U-small-structure fam-SQ
+module SΠ = ΠU-structure fam-SQΠ 
+
+-- The constructions below are all obviously natural in Γ
+
+-- Phase separator (yoneda of base)
+ϕ : Ty Γ
+ϕ = (λ γ → ⊤) , λ γ γ' a → ⊥
+
+-- ϕ is a proposition
+ϕ-prop : (t u : Tm Γ ϕ) → t ≡ u
+ϕ-prop t u = refl
+
+-- Squashed types are unaffected by ϕ
+Φ⇒SU : Tm Γ (ϕ ⇒ S.U) ≃ Tm Γ S.U
+Φ⇒SU .to (A , _) = (λ γ → A γ tt) , (λ γ γ' → tt)
+Φ⇒SU .from (A , _) = (λ γ a → A γ) , (λ γ γ' a a' → tt)
+Φ⇒SU .to-from (A , _) = refl
+Φ⇒SU .from-to (A , _) = refl
+
+-- All closed types can be moved either way
+closed-iso : Ty ∙ ≃ Tm ∙ S.U
+closed-iso .to (A₀ , A₁) = (λ _ → A₀ tt , (λ a → A₁ tt tt a)) , (λ γ γ' → tt)
+closed-iso .from (A , _) = ( λ _ → A tt .proj₁) , (λ _ _ a → A tt .proj₂ a)
+closed-iso .to-from x = refl
+closed-iso .from-to x = refl
+
+-- ϕ-modal types are a subuniverse of squashed types
+base-in : Tm Γ (ϕ ⇒ U) → Tm Γ S.U
+base-in (t₀ , t₁) = (λ γ → t₀ γ tt , λ _ → ⊤) , (λ γ γ' → tt)
+
+base-in-inj : (t u : Tm Γ (ϕ ⇒ U)) → base-in t ≡ base-in u → t ≡ u
+base-in-inj (t₀ , t₁) (u₀₁ , u₁) p =
+  let (p₀ , p₁) = Σ-≡,≡←≡ p in
+  let p₀' = (λ γ → Σ-≡,≡←≡ (cong (λ x → x γ) p₀)) in
+  Σ-≡,≡→≡ (funext (λ γ → funext (λ tt → p₀' γ .proj₁))
+  , funext (λ γ → funext (λ γ' → funext (λ tt → funext (λ ())))) )
+
+-- Squashed types are included in types
+squash-in : Tm Γ S.U → Ty Γ
+squash-in (t , _) = (λ γ → t γ .proj₁) , (λ γ γ' a → t γ .proj₂ a)
+
+-- but this is not injective!
+squash-in-inj : (t u : Tm Γ S.U) → squash-in t ≡ squash-in u → t ≡ u
+squash-in-inj (t₀ , t₁) (u₀₁ , u₁) p =
+  let (p₀ , p₁) = Σ-≡,≡←≡ p in
+  let p₀' = (λ γ → cong (λ x → x γ) p₀) in
+  let p₁' = (λ γ → cong (λ x → x γ) p₁) in
+  Σ-≡,≡→≡
+    (funext (λ γ → Σ-≡,≡→≡ (p₀' γ , {! !})) -- cannot fill this hole
+    , refl)
+
