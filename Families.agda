@@ -40,6 +40,9 @@ fam-c .p∘, = refl
 fam-c .q[,] = refl
 
 
+fam-Π : Π-structure fam-s fam-c
+fam-Π = ?
+
 -- fam-c .Π = {!!}
 -- fam-c .Π[] = {!!}
 -- fam-c .lam = {!!}

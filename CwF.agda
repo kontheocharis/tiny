@@ -62,36 +62,51 @@ module _ (s : CwF-sorts) where
     σ ⁺ = (σ ∘ p) ,, subst (Tm _) (sym [∘]T) q
   
 
-    module _ (core : CwF-core) where
+  module _ (c : CwF-core) where
+    open CwF-core c
 
-      record Π-structure : Set where
-        field
-          -- Terms
+    record Univ-structure : Set where
+      field
+        U : Ty Γ
+        U[] : U [ σ ]T ≡ U
 
-          -- Functions
-          Π : (A : Ty Γ) → (B : Ty (Γ ▷ A)) → Ty Γ
-          Π[] : (Π A B) [ σ ]T ≡ Π (A [ σ ]T) (B [ σ ⁺ ]T)
+        El : (t : Tm Γ U) → Ty Γ
+        El[] : (El t) [ σ ]T ≡ El (subst (Tm _) U[] (t [ σ ]))
 
-          lam : (t : Tm (Γ ▷ A) B) → Tm Γ (Π A B)
-          lam[] : (lam t) [ σ ] ≡[ cong (Tm _) Π[] ] lam (t [ σ ⁺ ])
-          ap : (t : Tm Γ (Π A B)) → Tm (Γ ▷ A) B
-          β : ap (lam t) ≡ t
-          η : lam (ap t) ≡ t
+        code : (A : Ty Γ) → Tm Γ U
+        code[] : (code A) [ σ ] ≡[ cong (Tm _) U[] ] code (A [ σ ]T)
 
-      record Univ-structure : Set where
-        field
-          -- Universe
-          U : Ty Γ
-          U[] : U [ σ ]T ≡ U
+        El-code : El (code A) ≡ A
+        code-El : code (El t) ≡ t
 
-          El : (t : Tm Γ U) → Ty Γ
-          El[] : (El t) [ σ ]T ≡ El (subst (Tm _) U[] (t [ σ ]))
+      _[_]U : (t : Tm Δ U) → (σ : Sub Γ Δ) → Tm Γ U
+      _[_]U t σ = coeTm U[] (t [ σ ])
 
-          code : (A : Ty Γ) → Tm Γ U
-          code[] : (code A) [ σ ] ≡[ cong (Tm _) U[] ] code (A [ σ ]T)
+      _⁺U : (σ : Sub Γ Δ) → Sub (Γ ▷ El (t [ σ ]U)) (Δ ▷ El t)
+      σ ⁺U = ((σ ∘ p) ,, subst (Tm _) (trans (cong (_[ p ]T) (sym El[])) (sym [∘]T)) q)
 
-          El-code : El (code A) ≡ A
-          code-El : code (El t) ≡ t
+      TmU : ∀ Γ → Tm Γ U → Set
+      TmU Γ t = Tm Γ (El t)
+
+      _[_]u : (a : TmU Δ t) → (σ : Sub Γ Δ) → TmU Γ (t [ σ ]U)
+      _[_]u a σ = coeTm El[] (a [ σ ])
+
+      _▷U_ : (Γ : Con) → Tm Γ U → Con
+      Γ ▷U t = Γ ▷ El t
+
+    record Π-structure (univ : Univ-structure) : Set where
+      open Univ-structure univ
+      field
+        Π : (t : Tm Γ U) → (u : Tm (Γ ▷U t) U) → Tm Γ U
+        Π[] : (Π t u) [ σ ]U ≡ Π (t [ σ ]U) (u [ σ ⁺U ]U)
+
+        lam : (f : TmU (Γ ▷U t) u) → TmU Γ (Π t u)
+        lam[] : (lam t) [ σ ]u ≡[ cong (TmU _) Π[] ] lam (t [ σ ⁺U ]u)
+
+        ap : (f : TmU Γ (Π t u)) → TmU (Γ ▷U t) u
+
+        β : ap (lam t) ≡ t
+        η : lam (ap t) ≡ t
 
 
 
