@@ -75,8 +75,8 @@ module in-CwF-sorts (s : CwF-sorts) where
 
         ap : (f : Tm Γ (Π A B)) → Tm (Γ ▷ A) B
 
-        β : ap (lam t) ≡ t
-        η : lam (ap t) ≡ t
+        Πβ : ap (lam t) ≡ t
+        Πη : lam (ap t) ≡ t
 
       _⇒_ : Ty Γ → Ty Γ → Ty Γ
       A ⇒ B = Π A (B [ p ]T)
@@ -113,16 +113,16 @@ module in-CwF-sorts (s : CwF-sorts) where
     record ΠU-structure (univ : U-structure) : Set where
       open U-structure univ
       field
-        Π : (t : Tm Γ U) → (u : Tm (Γ ▷U t) U) → Tm Γ U
-        Π[] : (Π t u) [ σ ]U ≡ Π (t [ σ ]U) (u [ σ ⁺U ]U)
+        ΠU : (t : Tm Γ U) → (u : Tm (Γ ▷U t) U) → Tm Γ U
+        ΠU[] : (ΠU t u) [ σ ]U ≡ ΠU (t [ σ ]U) (u [ σ ⁺U ]U)
 
-        lam : (f : TmU (Γ ▷U t) u) → TmU Γ (Π t u)
-        lam[] : (lam t) [ σ ]u ≡[ cong (TmU _) Π[] ] lam (t [ σ ⁺U ]u)
+        lamU : (f : TmU (Γ ▷U t) u) → TmU Γ (ΠU t u)
+        lamU[] : (lamU t) [ σ ]u ≡[ cong (TmU _) ΠU[] ] lamU (t [ σ ⁺U ]u)
 
-        ap : (f : TmU Γ (Π t u)) → TmU (Γ ▷U t) u
+        apU : (f : TmU Γ (ΠU t u)) → TmU (Γ ▷U t) u
 
-        β : ap (lam t) ≡ t
-        η : lam (ap t) ≡ t
+        ΠβU : apU (lamU t) ≡ t
+        ΠηU : lamU (apU t) ≡ t
 
 
 
