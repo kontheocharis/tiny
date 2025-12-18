@@ -6,7 +6,6 @@ open import Data.Product.Properties
 open import Data.Unit
 open import Data.Empty
 open import Data.Nat
-open import Relation.Binary.PropositionalEquality
 
 open import Utils
 open import CwF
@@ -65,25 +64,28 @@ module _ where
   fam-Π .Πβ = refl
   fam-Π .Πη = refl
 
-  open U-structure
+  open U-small-structure
+  open U-big-structure
 
   -- Alternative universe construction
-  fam-HSU : U-structure fam-s fam-c
+  fam-HSU : U-small-structure fam-s fam-c
   fam-HSU .U = (λ γ → Σ[ A ∈ Set ] (A → Set)) , λ γ a → ⊤
   fam-HSU .U[] = refl
   fam-HSU .El (t₀ , _) = (λ γ → t₀ γ .proj₁) , λ γ a → t₀ γ .proj₂ a
   fam-HSU .El[] = refl
-  fam-HSU .code (A₀ , A₁) = (λ γ → A₀ γ , A₁ γ) , λ γ γ' → tt
-  fam-HSU .code[] = refl
-  fam-HSU .El-code = refl
-  fam-HSU .code-El = refl
+
+  fam-HSU-b : U-big-structure fam-s fam-c fam-HSU
+  fam-HSU-b .code (A₀ , A₁) = (λ γ → A₀ γ , A₁ γ) , λ γ γ' → tt
+  fam-HSU-b .code[] = refl
+  fam-HSU-b .El-code = refl
+  fam-HSU-b .code-El = refl
 
 open CwF-sorts fam-s
 open in-CwF-sorts fam-s
 open CwF-core fam-c
 open in-CwF-core fam-c
 open Π-structure fam-Π
-open U-structure fam-HSU
+open U-small-structure fam-HSU
 
 -- Phase separator (yoneda of base)
 ϕ : Ty Γ
@@ -98,6 +100,6 @@ exp-ϕ : {A : Ty Γ} → Tm Γ (_⇒_ {Γ} (ϕ {Γ}) A) ≃ (∀ γ → A .proj�
 exp-ϕ .to (t₀ , t₁) = λ γ → t₀ γ tt
 exp-ϕ .from t = (λ γ a → t γ) , λ γ γ' a ()
 exp-ϕ .to-from = λ x → refl
-exp-ϕ .from-to (t₀ , t₁) = Σ-≡,≡→≡ (refl , funext λ x → funext λ y → funext  λ z → funext λ ()) 
+exp-ϕ .from-to (t₀ , t₁) = Σ≡ refl (funext λ x → funext λ y → funext  λ z → funext λ ()) 
 
 open Π-structure

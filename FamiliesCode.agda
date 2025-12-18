@@ -7,7 +7,6 @@ open import Data.Unit
 open import Data.Empty
 open import Data.Nat
 open import Data.Vec
-open import Relation.Binary.PropositionalEquality
 
 open import Utils
 open import CwFwE
@@ -69,7 +68,7 @@ module _ where
   fam-c .id∘ = refl
   fam-c .∙ = ⊤ , 0 , λ z₁ z₂ → ⊤
   fam-c .ε = (λ _ → tt) , (λ z₁ → []) , (λ γ ns _ → tt)
-  fam-c .∃!ε = Σ-≡,≡→≡ (refl , Σ-≡,≡→≡ (funext (λ x → is-empty) , refl))
+  fam-c .∃!ε = Σ≡ refl (Σ≡ (funext (λ _ → is-empty)) refl)
   (fam-c [ A₀ , A₁ ]T) (σ₀ , σₑ , σ₁) = (λ γ → A₀ (σ₀ γ)) , (λ γ a → A₁ (σ₀ γ) a)
   fam-c ._[_] {i = ω} (t₀ , tₑ , t₁) (σ₀ , σₑ , σ₁)
     = (λ γ → t₀ (σ₀ γ)) ,
@@ -98,9 +97,7 @@ module _ where
   fam-c .,∘ {i = z} = refl
   fam-c .,∘ {i = ω} = refl
   fam-c .p,q {i = z} = refl
-  fam-c .p,q {i = ω}
-    = Σ-≡,≡→≡ (refl , Σ-≡,≡→≡ (funext (λ x → head-tail)
-    , {!  subst-coh!}))
+  fam-c .p,q {i = ω} = Σ≡ refl (Σ≡ (funext (λ x → head-tail)) refl)
   fam-c .p∘, {i = z} = refl
   fam-c .p∘, {i = ω} = refl
   fam-c .q[,] {i = z} = refl

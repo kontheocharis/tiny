@@ -76,11 +76,11 @@ module _ where
   (fam-c ,# σ) π = σ .proj₁ , π
   fam-c .,#∘ = refl
   fam-c .p,#q = refl
-  fam-c .p∘,# {π = π} = Σ-≡,≡→≡ (refl , funext (λ γ → funext λ γ' → ⊥-elim (π γ γ'))) 
+  fam-c .p∘,# {π = π} = Σ≡ refl (funext (λ γ → funext λ γ' → ⊥-elim-prop (π γ γ'))) 
   fam-c .q[,#] = refl
   fam-c .↓ x γ = x .proj₁ γ
   fam-c .↑ x = x , λ γ ()
-  fam-c .↑↓ {t = t} = Σ-≡,≡→≡ (refl , funext λ x → funext λ ()) 
+  fam-c .↑↓ {t = t} = Σ≡ refl (funext λ x → funext λ ()) 
   fam-c .↓↑ = refl
 
 

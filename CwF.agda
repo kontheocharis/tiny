@@ -3,7 +3,6 @@ module CwF where
 
 open import Agda.Primitive
 open import Utils
-open import Relation.Binary.PropositionalEquality hiding ([_])
 
 record CwF-sorts : Set where
   field

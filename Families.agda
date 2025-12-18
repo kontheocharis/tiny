@@ -6,7 +6,6 @@ open import Data.Product.Properties
 open import Data.Unit
 open import Data.Empty
 open import Data.Nat
-open import Relation.Binary.PropositionalEquality
 
 open import Utils
 open import CwF
@@ -142,10 +141,10 @@ base-in (t₀ , t₁) = (λ γ → t₀ γ tt , λ _ → ⊤) , (λ γ γ' → t
 
 base-in-inj : (t u : Tm Γ (ϕ ⇒ U)) → base-in t ≡ base-in u → t ≡ u
 base-in-inj (t₀ , t₁) (u₀₁ , u₁) p =
-  let (p₀ , p₁) = Σ-≡,≡←≡ p in
-  let p₀' = (λ γ → Σ-≡,≡←≡ (cong (λ x → x γ) p₀)) in
-  Σ-≡,≡→≡ (funext (λ γ → funext (λ tt → p₀' γ .proj₁))
-  , funext (λ γ → funext (λ γ' → funext (λ tt → funext (λ ())))) )
+  let (p₀ ,P p₁) = ≡Σ p in
+  let p₀' = (λ γ → ≡Σ (cong (λ x → x γ) p₀)) in
+  Σ≡ (funext (λ γ → funext (λ tt → p₀' γ .fst)))
+  (funext (λ γ → funext (λ γ' → funext (λ tt → funext (λ ())))) )
 
 -- Squashed types are included in types
 squash-in : Tm Γ S.U → Ty Γ
@@ -154,10 +153,10 @@ squash-in (t , _) = (λ γ → t γ .proj₁) , (λ γ γ' a → t γ .proj₂ a
 -- but this only injective for closed codes!
 squash-in-inj : (t u : Tm ∙ S.U) → squash-in t ≡ squash-in u → t ≡ u
 squash-in-inj (t₀ , t₁) (u₀₁ , u₁) p =
-  let (p₀ , p₁) = Σ-≡,≡←≡ p in
+  let (p₀ ,P p₁) = ≡Σ p in
   let p₀' = cong (λ x → x tt) p₀ in
   let p₁' = cong (λ x → x tt tt) p₁ in
-  Σ-≡,≡→≡
-    (funext (λ tt → Σ-≡,≡→≡ (p₀' , {! p₁' tt!})) 
-    , refl)
+  Σ≡
+    (funext (λ tt → Σ≡ (p₀') {! p₁'!})) 
+    (refl)
 
