@@ -182,8 +182,8 @@ module in-CwFwE-sorts (s : CwFwE-sorts) where
 
         ap : (f : Tm Γ ω (Π i A B)) → Tm (Γ ▷[ i ] A) ω (B [ pz ]T)
 
-        Πβ : ap (lam t) ≡ t
-        Πη : lam (ap t) ≡ t
+        Πβ : ap {i = i} (lam t) ≡ t
+        Πη : lam {i = i} (ap t) ≡ t
 
     record U-structure : Set where
       field
