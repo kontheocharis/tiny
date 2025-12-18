@@ -3,9 +3,9 @@ module CwFwE where
 
 open import Agda.Primitive
 open import Utils
-open import Relation.Binary.PropositionalEquality hiding ([_])
+-- open import Relation.Binary.PropositionalEquality hiding ([_])
 
-open ≡-Reasoning
+-- open ≡-Reasoning
 
 data Mode : Set where
   z : Mode
@@ -106,7 +106,7 @@ module in-CwFwE-sorts (s : CwFwE-sorts) where
       p,#q : p# {Γ} ,# q# ≡ id
       p∘,# : p# ∘ (σ ,# π) ≡ σ
       q[,#] : q# [ σ ,# π ]# ≡ π
-      
+        
       -- Conversion between terms
       ↓ : Tm (Γ ▷#) ω (A [ p# ]T) → Tm Γ z A
       ↑ : Tm Γ z A → Tm (Γ ▷#) ω (A [ p# ]T)
