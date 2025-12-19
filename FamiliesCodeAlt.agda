@@ -144,34 +144,40 @@ module _ where
   fam-Π .Π ω (Aₛ , A₀ , A₁) (Bₛ , B₀ , B₁) =
     (λ γ → (a : Aₛ γ) → Bₛ (γ , a))
     , (λ γₛ γ fₛ → ∀ aₛ → (a : A₀ γₛ γ aₛ) → B₀ (γₛ , aₛ) (γ , a) (fₛ aₛ))
-    , λ γₛ γ aₛ z₁ z₂ → ℕ 
-  -- fam-Π .Π z (A₀ , A₁) (B₀ , B₁) =
-  --   (λ γ → (a : A₀ γ) → B₀ (γ , a))
-  --   , λ γ f fₑ → ∀ a → B₁ (γ , a) (f a) fₑ 
-  -- fam-Π .Π[] {i = ω} = refl
-  -- fam-Π .Π[] {i = z} = refl
-  -- fam-Π .lam {i = z} (f₀ , fₑ , f₁) =
-  --   (λ γ a → f₀ (γ , a))
-  --   , fₑ
-  --   , (λ γ ns γ' a → f₁ (γ , a) ns γ')
-  -- fam-Π .lam {i = ω} (f₀ , fₑ , f₁) =
-  --   (λ γ a → f₀ (γ , a))
-  --   , (λ γₑ → ƛ (λ x → fₑ (γₑ , x)))
-  --   , λ γ ns γ' a aₑ a' → f₁ (γ , a) (ns , aₑ) (γ' , a') 
+    , λ γₛ γ fₛ fₑ f₀
+      → ∀ aₛ aₑ a → A₁ γₛ γ aₛ aₑ a → B₁ (γₛ , aₛ) (γ , a) (fₛ aₛ) (fₑ ＠ aₑ) (f₀ aₛ a)
+  fam-Π .Π z (Aₛ , A₀ , A₁) (Bₛ , B₀ , B₁) =
+    (λ γ → (a : Aₛ γ) → Bₛ (γ , a))
+    , (λ γₛ γ fₛ → ∀ aₛ → (a : A₀ γₛ γ aₛ) → B₀ (γₛ , aₛ) (γ , a) (fₛ aₛ))
+    , λ γₛ γ fₛ fₑ f₀
+      → ∀ aₛ a → B₁ (γₛ , aₛ) (γ , a) (fₛ aₛ) fₑ (f₀ aₛ a)
+  fam-Π .Π[] {i = ω} = refl
+  fam-Π .Π[] {i = z} = refl
+  fam-Π .lam {i = ω} (fₛ , fₑ , f₀ , f₁) =
+     (λ γ a → fₛ (γ , a))
+    , (λ γₑ → ƛ (λ x → fₑ (γₑ , x)))
+     , (λ γₛ γ aₛ a → f₀ (γₛ , aₛ) (γ , a))
+     , λ γₛ γₑ γ γ' aₛ aₑ a a' → f₁ (γₛ , aₛ) (γₑ , aₑ) (γ , a) (γ' , a')
+  fam-Π .lam {i = z} (fₛ , fₑ , f₀ , f₁) =
+     (λ γ a → fₛ (γ , a))
+     , fₑ
+     , (λ γₛ γ aₛ a → f₀ (γₛ , aₛ) (γ , a))
+     , λ γₛ γₑ γ γ' aₛ a → f₁ (γₛ , aₛ) γₑ (γ , a) γ' 
   -- -- fam-Π .lam[] = ?
-  -- fam-Π .ap {i = z} (t₀ , tₑ , t₁) =
-  --   (λ (γ , a) → t₀ γ a)
-  --   , tₑ
-  --   , λ (γ , a) ns γ' → t₁ γ ns γ' a
-  -- fam-Π .ap {i = ω} (t₀ , tₑ , t₁) =
-  --   (λ (γ , a) → t₀ γ a)
-  --   , (λ (γₑ , aₑ) → tₑ γₑ ＠ aₑ)
-  --   , λ (γ , a) (γₑ , aₑ) (γ' , a')
-  --     → t₁ γ γₑ γ' a aₑ a'
-  -- fam-Π .Πβ {i = z} = refl
-  -- fam-Π .Πβ {i = ω} = refl
-  -- fam-Π .Πη {i = z} = refl
-  -- fam-Π .Πη {i = ω} = refl
+  fam-Π .ap {i = z} (tₛ , tₑ , t₀ , t₁) =
+    (λ (γ , a) → tₛ γ a)
+    , tₑ
+    , (λ (γₛ , aₛ) (γ , a) → t₀ γₛ γ aₛ a)
+    , λ (γₛ , aₛ) γₑ (γ , a) γ' → t₁ γₛ γₑ γ γ' aₛ a
+  fam-Π .ap {i = ω} (tₛ , tₑ , t₀ , t₁) =
+    (λ (γ , a) → tₛ γ a)
+    , (λ (γₑ , aₑ) → tₑ γₑ ＠ aₑ)
+    , (λ (γₛ , aₛ) (γ , a) → t₀ γₛ γ aₛ a)
+    , λ (γₛ , aₛ) (γₑ , aₑ) (γ , a) (γ' , a') → t₁ γₛ γₑ γ γ' aₛ aₑ a a'
+  fam-Π .Πβ {i = z} = refl
+  fam-Π .Πβ {i = ω} = refl
+  fam-Π .Πη {i = z} = refl
+  fam-Π .Πη {i = ω} = refl
 
   open U-structure
 
@@ -180,12 +186,12 @@ module _ where
     (λ γ → Set)
     , (λ γₛ γ Aₛ → Σ[ A₀ ∈ (Aₛ → Set) ] ((aₛ : Aₛ) → Λ → A₀ aₛ → Set))
     , λ γ γₛ a₀ aₛ aₑ → ⊤
--- --   fam-U .U[] = refl
+  fam-U .U[] = refl
   fam-U .El (tₛ , t₀) =
      tₛ , (λ γₛ γ aₛ → t₀ γₛ γ .proj₁ aₛ) , λ γₛ γ aₛ aₑ aₒ → t₀ γₛ γ .proj₂ aₛ aₑ aₒ
---   fam-U .El[] = refl
+  fam-U .El[] = refl
   fam-U .code (Aₛ , A₀ , A₁) = Aₛ , λ γₛ γ → A₀ γₛ γ , A₁ γₛ γ
---   fam-U .code[] = refl
+  fam-U .code[] = refl
   fam-U .El-code = refl
   fam-U .code-El = refl
 
