@@ -46,20 +46,7 @@ open ΣProp public
 
 postulate
   coe : A ≡ B → A → B
-  coe-eq : coe refl x ≡ x
-  {-# REWRITE coe-eq #-}
-
   funext : ∀ {B : A → Set ℓ'} {f g : (x : A) → B x} → (∀ x → f x ≡ g x) → f ≡ g
-
--- Some fragment of OTT
-module _ {A : Set ℓ} {B : A → Set ℓ'} {A' : Set ℓ} {B' : A' → Set ℓ'} where
-  postulate
-    coe-Σ : (Σ A B ≡ Σ A' B') → (ΣProp (A ≡ A') (λ p → ∀ x → B x ≡ B' (coe p x)))
-    coe-pair :
-      {a : A} {b : B a}
-      {p : Σ A B ≡ Σ A' B'}
-      → coe p (a , b) ≡ (coe (coe-Σ p .fst) a , coe (coe-Σ p .snd a) b)
-    {-# REWRITE coe-pair #-}
 
 opaque
   cong : (f : A → B) → x ≡ y → f x ≡ f y
@@ -70,6 +57,33 @@ opaque
 
   trans : x ≡ y → y ≡ z → x ≡ z
   trans refl p = p
+
+-- Some fragment of OTT
+--
+-- We don't add computation rules for the equality type---since it is inductively
+-- defined that would break things.
+module _ {A : Set ℓ} {B : A → Set ℓ'} {A' : Set ℓ} {B' : A' → Set ℓ'} where
+  postulate
+    coe-Σ : (Σ A B ≡ Σ A' B') → (ΣProp (A ≡ A') (λ p → ∀ x → B x ≡ B' (coe p x)))
+    coe-pair :
+      {a : A} {b : B a}
+      {p : Σ A B ≡ Σ A' B'}
+      → coe p (a , b) ≡ (coe (coe-Σ p .fst) a , coe (coe-Σ p .snd a) b)
+    {-# REWRITE coe-pair #-}
+
+    coe-Π : (((a : A) → B a) ≡ ((a : A') → B' a))
+      → (ΣProp (A' ≡ A) (λ p → ∀ x → B (coe p x) ≡ B' x))
+    coe-lam :
+      {f : (a : A) → B a}
+      {p : ((a : A) → B a) ≡ ((a : A') → B' a)}
+      → coe p f ≡ λ a → coe (coe-Π p .snd _) (f (coe (coe-Π p .fst) a))
+    {-# REWRITE coe-lam #-}
+
+-- Adding this as the last rule because it's the most general. Otherwise
+-- the typechecker dies
+postulate
+  coe-eq : coe refl x ≡ x
+  {-# REWRITE coe-eq #-}
 
 subst : (P : A → Set ℓ) (p : x ≡ y) → P x → P y
 subst P p a = coe (cong P p) a

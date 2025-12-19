@@ -266,4 +266,3 @@ noninterference (fₛ , fₑ , f₀ , f₁) =
     let by p0 = f₁ tt tt tt tt 0 tt in by (embed-nat-inj _ _ (trans (sym pn) p0)))
   , f₁ tt tt tt tt 0 tt
 
-

@@ -156,7 +156,5 @@ squash-in-inj (t₀ , t₁) (u₀₁ , u₁) p =
   let (p₀ ,P p₁) = ≡Σ p in
   let p₀' = cong (λ x → x tt) p₀ in
   let p₁' = cong (λ x → x tt tt) p₁ in
-  Σ≡
-    (funext (λ tt → Σ≡ (p₀') {! p₁'!})) 
-    (refl)
+  Σ≡ (funext (λ tt → Σ≡ p₀' p₁')) refl
 
