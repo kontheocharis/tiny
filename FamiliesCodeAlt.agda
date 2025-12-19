@@ -5,7 +5,7 @@ open import Data.Product
 open import Data.Product.Properties
 open import Data.Unit
 open import Data.Empty
-open import Data.Nat
+open import Data.Nat hiding (zero)
 open import Data.Vec
 
 open import Utils
@@ -18,6 +18,29 @@ postulate
   Λη : ∀ f →  ƛ (f ＠_) ≡ f
   Λβ : ∀ f x → (ƛ f) ＠ x ≡ f x
   {-# REWRITE Λη Λβ #-}
+
+  zeroΛ : Λ
+  succΛ : Λ → Λ
+  recΛ : Λ → (Λ → Λ → Λ) → Λ → Λ
+  recΛβ-zero : ∀ {zr su} → recΛ zr su zeroΛ ≡ zr
+  recΛβ-succ : ∀ {zr su n} → recΛ zr su (succΛ n) ≡ su n (recΛ zr su n)
+  {-# REWRITE recΛβ-zero recΛβ-succ #-}
+
+  zeroΛ≠succΛ : ∀ {x} → zeroΛ ≡ succΛ x → ⊥
+{-# INJECTIVE succΛ #-}
+
+succΛ-inj : ∀ {x y} → succΛ x ≡ succΛ y → x ≡ y
+succΛ-inj refl = refl
+
+embed-nat : ℕ → Λ
+embed-nat ℕ.zero = zeroΛ
+embed-nat (suc x) = succΛ (embed-nat x)
+
+embed-nat-inj : ∀ n m → embed-nat n ≡ embed-nat m → n ≡ m
+embed-nat-inj ℕ.zero ℕ.zero p = refl
+embed-nat-inj ℕ.zero (suc m) p = ⊥-elim-prop (zeroΛ≠succΛ p)
+embed-nat-inj (suc n) ℕ.zero p = ⊥-elim-prop (zeroΛ≠succΛ (sym p))
+embed-nat-inj (suc n) (suc m) p = cong suc (embed-nat-inj _ _ (succΛ-inj p))
 
 module _ where
   open CwFwE-sorts
@@ -198,11 +221,49 @@ module _ where
   fam-U .El-code = refl
   fam-U .code-El = refl
 
--- -- -- open CwFwE-sorts fam-s
--- -- -- open in-CwFwE-sorts fam-s
--- -- -- open CwFwE-core fam-c
--- -- -- open in-CwFwE-core fam-c
--- -- -- -- open Π-structure fam-Π
--- -- -- open U-structure fam-HSU
+open CwFwE-sorts fam-s
+open in-CwFwE-sorts fam-s
+open CwFwE-core fam-c
+open in-CwFwE-core fam-c
+open Π-structure fam-Π
+open U-structure fam-U
+
+Nat : Ty Γ
+Nat =
+  (λ γ → ℕ) 
+  , (λ γₛ z₁ z₂ → ⊤)
+  , λ γₛ γ aₛ aₑ a₀ → (aₑ ≡ embed-nat aₛ) true
+
+zero : Tm Γ ω (Nat {Γ})
+zero =
+  (λ γ → 0)
+  , (λ _ → zeroΛ)
+  , (λ γₛ γ → tt)
+  , (λ γₛ γₑ γ γ' → by refl)
+
+succ : Tm Γ ω (Nat {Γ}) → Tm Γ ω (Nat {Γ})
+succ (nₛ , nₑ , n₀ , n₁) =
+  (λ γ → suc (nₛ γ))
+  , (λ γₑ → succΛ (nₑ γₑ) )
+  , (λ γₛ γ → tt)
+  , λ γₛ γₑ γ γ' → by (cong succΛ (n₁ γₛ γₑ γ γ' .witness))
+
+tracking : Tm ∙ ω (Π {∙} ω (Nat {∙}) (Nat {∙ ▷[ z ] (Nat {∙})}))
+  → Σ[ fₛ ∈ (ℕ → ℕ) ]
+    Σ[ fₑ ∈ Λ ]
+    (∀ aₛ aₑ → (aₑ ≡ embed-nat aₛ) true → ((fₑ ＠ aₑ) ≡ embed-nat (fₛ aₛ)) true)
+tracking (fₛ , fₑ , f₀ , f₁) = fₛ tt , fₑ tt , λ aₛ aₑ → f₁ tt tt tt tt aₛ aₑ tt
+
+noninterference : Tm ∙ ω (Π {∙} z (Nat {∙}) (Nat {∙ ▷[ z ] (Nat {∙})}))
+  → Σ[ fₛ ∈ (ℕ → ℕ) ]
+    Σ[ fₑ ∈ Λ ]
+    Σ[ xₛ ∈ ℕ ]
+    ((∀ aₛ → (fₛ aₛ ≡ xₛ) true) × (fₑ ≡ embed-nat xₛ) true)
+noninterference (fₛ , fₑ , f₀ , f₁) =
+  fₛ tt , fₑ tt , fₛ tt 0
+  , (λ n →
+    let by pn = f₁ tt tt tt tt n tt in
+    let by p0 = f₁ tt tt tt tt 0 tt in by (embed-nat-inj _ _ (trans (sym pn) p0)))
+  , f₁ tt tt tt tt 0 tt
 
 
