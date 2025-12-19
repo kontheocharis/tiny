@@ -133,10 +133,12 @@ module _ where
       (Σ≡ refl ( funext (λ γₛ → funext (λ γₑ → ⊥-elim-prop (π γₑ))))))
   fam-c .q[,#] = refl
   fam-c .↓ (xₛ , xₑ , x₀ , x₁) = xₛ , x₀
+  fam-c .↓[] = refl
   fam-c .↑ (xₛ , x₀) = xₛ , (λ ()) , x₀ , λ γₛ ()
   fam-c .↑↓ {t = t} = Σ≡ refl (Σ≡ (funext (λ ()))
     (Σ≡ refl (funext (λ x → funext (λ y → ⊥-elim-prop y)))))
   fam-c .↓↑ = refl
+  fam-c .pz∘⁺≡⁺∘pz' = refl
 
   open Π-structure
 
@@ -163,7 +165,8 @@ module _ where
      , fₑ
      , (λ γₛ γ aₛ a → f₀ (γₛ , aₛ) (γ , a))
      , λ γₛ γₑ γ γ' aₛ a → f₁ (γₛ , aₛ) γₑ (γ , a) γ' 
-  -- -- fam-Π .lam[] = ?
+  fam-Π .lam[] {i = z} = refl
+  fam-Π .lam[] {i = ω} = refl
   fam-Π .ap {i = z} (tₛ , tₑ , t₀ , t₁) =
     (λ (γ , a) → tₛ γ a)
     , tₑ
@@ -185,7 +188,7 @@ module _ where
   fam-U .U =
     (λ γ → Set)
     , (λ γₛ γ Aₛ → Σ[ A₀ ∈ (Aₛ → Set) ] ((aₛ : Aₛ) → Λ → A₀ aₛ → Set))
-    , λ γ γₛ a₀ aₛ aₑ → ⊤
+    , λ γ γₛ aₛ aₑ a₀ → ⊤
   fam-U .U[] = refl
   fam-U .El (tₛ , t₀) =
      tₛ , (λ γₛ γ aₛ → t₀ γₛ γ .proj₁ aₛ) , λ γₛ γ aₛ aₑ aₒ → t₀ γₛ γ .proj₂ aₛ aₑ aₒ
